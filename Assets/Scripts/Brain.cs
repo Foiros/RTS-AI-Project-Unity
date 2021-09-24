@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Brain
 {
+    private Legs _legs;
     private BinaryTree _binaryTree = new BinaryTree();
     private ActionCenter _actionCenter = new ActionCenter();
     
@@ -18,8 +19,12 @@ public class Brain
     private bool has_ingredient, in_base;
     
     // Start is called before the first frame update
-    public void Awaken()
+    public void Awaken(Legs legs)
     {
+        _legs = legs;
+        has_ingredient = false;
+        in_base = true;
+
         for (int i = 0; i < 7; i++)
         {
             _binaryTree.Insert(array[i], _statesArray[i]);
@@ -29,7 +34,8 @@ public class Brain
     // Update is called once per frame
     public void Update()
     {
-        Update_Information();
+        if(!_legs.Get_Go_To_Base()&& !_legs.Get_Go_To_Mushrooms())
+            Update_Information();
     }
 
     void Update_Information()
@@ -37,6 +43,7 @@ public class Brain
         if(!has_ingredient && in_base){
 
             action_node = _binaryTree.Search(7);
+            _legs.Change_Destination_From_Outside(1);;
         }
         else if(!has_ingredient && !in_base){
 
@@ -45,21 +52,23 @@ public class Brain
         else if(has_ingredient && !in_base){
 
             action_node = _binaryTree.Search(9);
+            _legs.Change_Destination_From_Outside(0);
         }
         else if(has_ingredient && in_base){
 
             action_node = _binaryTree.Search(23);
         }
-
+        
         Use_Information();
         Change_Information();
     }
-
+    
+    
     void Use_Information()
     {
         _actionCenter.ChooseAction(action_node);
     }
-
+    
     void Change_Information()
     {
         if(action_node.state == States.GoGather){
@@ -67,7 +76,7 @@ public class Brain
             in_base = false;
         }
         else if(action_node.state == States.Gather){
-
+            
             has_ingredient = true;
         }
         else if(action_node.state  == States.ReturnToBase){
